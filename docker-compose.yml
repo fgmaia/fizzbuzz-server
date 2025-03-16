@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  fizzbuzz-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fizzbuzz-server
+    network_mode: host
+    environment:
+      - PORT=8080
+    restart: unless-stopped
+    # If you need to mount volumes for configuration or data
+    # volumes:
+    #   - ./config:/root/config
