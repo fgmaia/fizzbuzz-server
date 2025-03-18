@@ -3,47 +3,21 @@ package handlers_test
 import (
 	"encoding/json"
 	"fizzbuzz-server/internal/apps"
-	"fizzbuzz-server/internal/handlers"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupApp() *fiber.App {
-	// Initialize the application
-	apps.App()
-
-	// Create a new Fiber app
-	app := fiber.New()
-
-	// Add validator middleware
-	validate := validator.New()
-	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("validator", validate)
-		return c.Next()
-	})
-
-	// Register the FizzBuzz handler
-	app.Get("/fizzbuzz", handlers.FizzbuzzHandler)
-
-	return app
-}
-
 func TestFizzbuzzHandler_ValidRequest(t *testing.T) {
-	// Setup
-	app := setupApp()
-
 	// Create a test request
 	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3&int2=5&limit=15&str1=fizz&str2=buzz", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Perform the request
-	resp, err := app.Test(req)
+	resp, err := apps.App().FiberApp.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -79,15 +53,12 @@ func TestFizzbuzzHandler_ValidRequest(t *testing.T) {
 }
 
 func TestFizzbuzzHandler_MissingParameters(t *testing.T) {
-	// Setup
-	app := setupApp()
-
 	// Create a test request with missing parameters
 	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Perform the request
-	resp, err := app.Test(req)
+	resp, err := apps.App().FiberApp.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
@@ -106,15 +77,12 @@ func TestFizzbuzzHandler_MissingParameters(t *testing.T) {
 }
 
 func TestFizzbuzzHandler_InvalidParameters(t *testing.T) {
-	// Setup
-	app := setupApp()
-
 	// Create a test request with invalid parameters
 	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=0&int2=5&limit=15&str1=fizz&str2=buzz", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Perform the request
-	resp, err := app.Test(req)
+	resp, err := apps.App().FiberApp.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
@@ -133,15 +101,12 @@ func TestFizzbuzzHandler_InvalidParameters(t *testing.T) {
 }
 
 func TestFizzbuzzHandler_DefaultValues(t *testing.T) {
-	// Setup
-	app := setupApp()
-
 	// Create a test request without str1 and str2
 	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3&int2=5&limit=15", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Perform the request
-	resp, err := app.Test(req)
+	resp, err := apps.App().FiberApp.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -163,42 +128,40 @@ func TestFizzbuzzHandler_DefaultValues(t *testing.T) {
 }
 
 func TestFizzbuzzHandler_LargeLimit(t *testing.T) {
-	// Setup
-	app := setupApp()
+	t.Parallel()
 
-	// Create a test request with a large limit
-	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3&int2=5&limit=100&str1=fizz&str2=buzz", nil)
-	req.Header.Set("Content-Type", "application/json")
+	t.Run("test large limit", func(t *testing.T) {
+		// Create a test request with a large limit
+		req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3&int2=5&limit=100&str1=fizz&str2=buzz", nil)
+		req.Header.Set("Content-Type", "application/json")
 
-	// Perform the request
-	resp, err := app.Test(req)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+		// Perform the request
+		resp, err := apps.App().FiberApp.Test(req)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// Parse the response
-	body, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
+		// Parse the response
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(t, err)
 
-	var response map[string][]string
-	err = json.Unmarshal(body, &response)
-	assert.NoError(t, err)
+		var response map[string][]string
+		err = json.Unmarshal(body, &response)
+		assert.NoError(t, err)
 
-	// Verify the response
-	result, exists := response["result"]
-	assert.True(t, exists)
-	assert.Equal(t, 100, len(result))
+		// Verify the response
+		result, exists := response["result"]
+		assert.True(t, exists)
+		assert.Equal(t, 100, len(result))
+	})
 }
 
 func TestFizzbuzzHandler_ExceedMaxLimit(t *testing.T) {
-	// Setup
-	app := setupApp()
-
 	// Create a test request with a limit exceeding the maximum
 	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3&int2=5&limit=20000&str1=fizz&str2=buzz", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Perform the request
-	resp, err := app.Test(req)
+	resp, err := apps.App().FiberApp.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
@@ -217,15 +180,12 @@ func TestFizzbuzzHandler_ExceedMaxLimit(t *testing.T) {
 }
 
 func TestFizzbuzzHandler_CustomStrings(t *testing.T) {
-	// Setup
-	app := setupApp()
-
 	// Create a test request with custom strings
 	req := httptest.NewRequest(http.MethodGet, "/fizzbuzz?int1=3&int2=5&limit=15&str1=hello&str2=world", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Perform the request
-	resp, err := app.Test(req)
+	resp, err := apps.App().FiberApp.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 

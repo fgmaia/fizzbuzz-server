@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"fizzbuzz-server/internal/apps/contracts"
 	"fizzbuzz-server/internal/services"
 	"sync"
 
@@ -22,8 +23,8 @@ var App = func() *FizzbuzzApp {
 
 type FizzbuzzApp struct {
 	FiberApp        *fiber.App
-	FizzBuzzService *services.FizzBuzzService
-	StatsService    *services.StatsService
+	FizzBuzzService contracts.FizzBuzzServiceIface
+	StatsService    contracts.StatsServiceIface
 }
 
 func (f *FizzbuzzApp) init() {
