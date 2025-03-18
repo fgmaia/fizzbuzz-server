@@ -6,10 +6,72 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fizzbuzz-server
-    network_mode: host
+    ports:
+      - "8080:8080"
     environment:
       - PORT=8080
+      - TELEMETRY_ENABLED=true
+      - TELEMETRY_SERVICE_NAME=fizzbuzz-service
+      - TELEMETRY_OTLP_ENDPOINT=otel-collector:4317
+      - TELEMETRY_RESOURCE_ATTRIBUTES=deployment.environment=production
     restart: unless-stopped
-    # If you need to mount volumes for configuration or data
-    # volumes:
-    #   - ./config:/root/config
+    depends_on:
+      - otel-collector
+    networks:
+      - fizzbuzz-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - fizzbuzz-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - fizzbuzz-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Metrics endpoint
+      - "8889:8889"   # Prometheus exporter
+    restart: unless-stopped
+    networks:
+      - fizzbuzz-network
+
+networks:
+  fizzbuzz-network:
+    driver: bridge
+
+volumes:
+  grafana-storage:
