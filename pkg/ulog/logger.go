@@ -16,7 +16,7 @@ var (
 	buildInfo   *debug.BuildInfo
 )
 
-func LogInit(fileName string) {
+func LogInit() {
 	// Console Writer (for stdout)
 	consoleWriter := zerolog.ConsoleWriter{
 		Out:        os.Stdout,
@@ -64,6 +64,10 @@ func Info(msg string, fields ...interface{}) {
 	}
 }
 
+func Infof(msg string, fields ...interface{}) {
+	logger.Info().Msgf(msg, fields...)
+}
+
 func InfoE(msg string) {
 	logger.Info().
 		Int("pid", os.Getpid()).
@@ -82,6 +86,10 @@ func Error(msg string, fields ...interface{}) {
 	} else {
 		logger.Error().Msg(msg)
 	}
+}
+
+func Errorf(msg string, fields ...interface{}) {
+	logger.Error().Msgf(msg, fields...)
 }
 
 func Panic(r any) {

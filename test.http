@@ -1,0 +1,9 @@
+@host = http://localhost:8080
+
+### test fizzbuzzz
+get {{ host }}/fizzbuzz?int1=3&int2=5&limit=100&str1=fizz&str2=buzz
+Content-Type: application/json
+
+### test fizzbuzzz
+get {{ host }}/fizzbuzz?in1=3&int2=5&limit=100&str1=fizz&str2=buzz
+Content-Type: application/json

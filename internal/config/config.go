@@ -21,6 +21,7 @@ type ServerConfig struct {
 }
 
 // TelemetryConfig holds OpenTelemetry configuration
+// Works with both OpenTelemetry Collector and Grafana Alloy
 type TelemetryConfig struct {
 	OTLPEndpoint      string
 	ServiceName       string
@@ -28,6 +29,7 @@ type TelemetryConfig struct {
 }
 
 // PrometheusConfig holds Prometheus configuration
+// Works with both Prometheus and Grafana Alloy
 type PrometheusConfig struct {
 	Enabled      bool
 	Endpoint     string
@@ -48,14 +50,14 @@ func Load() (*Config, error) {
 			Port: getEnv("PORT", "8080"),
 		},
 		Telemetry: TelemetryConfig{
-			OTLPEndpoint:       getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"),
-			ServiceName:        getEnv("OTEL_SERVICE_NAME", "fizzbuzz-server"),
-			ResourceAttributes: getEnv("OTEL_RESOURCE_ATTRIBUTES", "service.version=1.0.0,deployment.environment=development"),
+			OTLPEndpoint:       getEnv("TELEMETRY_OTLP_ENDPOINT", "alloy:4317"),
+			ServiceName:        getEnv("TELEMETRY_SERVICE_NAME", "fizzbuzz-server"),
+			ResourceAttributes: getEnv("TELEMETRY_RESOURCE_ATTRIBUTES", "service.version=1.0.0,deployment.environment=development"),
 		},
 		Prometheus: PrometheusConfig{
 			Enabled:      getBoolEnv("PROMETHEUS_ENABLED", true),
 			Endpoint:     getEnv("PROMETHEUS_ENDPOINT", "/metrics"),
-			PushGateway:  getEnv("PROMETHEUS_PUSH_GATEWAY", "http://localhost:9091"),
+			PushGateway:  getEnv("PROMETHEUS_PUSH_GATEWAY", "http://pushgateway:9091"),
 			PushInterval: getDurationEnv("PROMETHEUS_PUSH_INTERVAL", 10*time.Second),
 		},
 	}

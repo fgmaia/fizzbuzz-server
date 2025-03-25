@@ -22,7 +22,7 @@ func RegisterRoutes(fiberApp *fiber.App) {
 	fiberApp.Get("/stats", Stats)
 	// Prometheus metrics endpoint
 	fiberApp.Get("/metrics", MetricsHandler)
-	
+
 	_ = rateLimitConfig
 	/*
 		fiberApp.Get("senior-rh-emp/:cpf", limiter.New(rateLimitConfig), TokenMiddleware(func(ctx *fiber.Ctx) error {

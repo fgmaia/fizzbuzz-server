@@ -3,6 +3,7 @@ package apps
 import (
 	"fizzbuzz-server/internal/apps/contracts"
 	"fizzbuzz-server/internal/services"
+	"fizzbuzz-server/pkg/ulog"
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,9 +29,7 @@ type FizzbuzzApp struct {
 }
 
 func (f *FizzbuzzApp) init() {
-	//ulog.LogInit(logFileName)
-	//ulog.Info("TupanWegGo - Conexão:", "connection string", config.OracleConnectionString())
-
+	ulog.LogInit()
 	f.FizzBuzzService = services.NewFizzBuzzService()
 	f.StatsService = services.NewStatsService()
 }
